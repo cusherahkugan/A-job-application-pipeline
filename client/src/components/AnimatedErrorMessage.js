@@ -9,7 +9,7 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
       setAnimationState('talking');
     }, 600);
     
-    // Auto close after 5 seconds
+    // Auto close after 4 seconds
     const closeTimer = setTimeout(() => {
       setAnimationState('exit');
       
@@ -17,7 +17,7 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
       setTimeout(() => {
         if (onClose) onClose();
       }, 500);
-    }, 5000);
+    }, 4000);
     
     return () => {
       clearTimeout(talkingTimer);
@@ -28,50 +28,60 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
   // Generate personalized messages based on the error
   const getErrorTitle = () => {
     if (message.includes("name")) {
-      return "Hello There!";
+      return "Hey there!";
     } else if (message.includes("email")) {
-      return "Quick Note";
+      return "Oops!";
     } else if (message.includes("phone")) {
-      return "One Moment";
+      return "Just a sec!";
     } else if (message.includes("CV")) {
-      return "Almost Complete";
+      return "Almost there!";
     } else {
-      return "Attention Required";
+      return "Hmm...";
     }
   };
   
+  // Get animated character expression based on error type
+  const getCharacterExpression = () => {
+    if (message.includes("name")) {
+      return "questioning";
+    } else if (message.includes("email")) {
+      return "confused";
+    } else if (message.includes("phone")) {
+      return "thinking";
+    } else if (message.includes("CV")) {
+      return "pointing";
+    } else {
+      return "default";
+    }
+  };
+  
+  const expression = getCharacterExpression();
+  
   return (
-    // Using fixed positioning with inset-0 to ensure full viewport coverage
-    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ position: 'fixed' }}>
-      {/* Full-screen backdrop with proper fixed positioning */}
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300" 
+        className="absolute inset-0 duration-300" 
         style={{ 
-          opacity: animationState === 'exit' ? 0 : 1,
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-          zIndex: 40
+         
+         
         }}
         onClick={() => setAnimationState('exit')}
       />
       
       <div 
-        className={`bg-white rounded-lg p-4 sm:p-6 shadow-xl max-w-sm w-full mx-4 z-50 relative transition-all duration-500 transform flex
+        className={`bg-white rounded-lg p-4 sm:p-6 shadow-xl max-w-sm w-full mx-4 z-10 transition-all duration-500 transform flex relative
           ${animationState === 'enter' ? 'translate-y-0 scale-100' : ''} 
           ${animationState === 'exit' ? 'translate-y-16 scale-95 opacity-0' : ''}
           ${animationState === 'talking' ? 'scale-100' : 'scale-95'}
         `}
         style={{
-          animation: animationState === 'enter' ? 'pop-in 0.6s ease-in-out' : ''
+          animation: animationState === 'enter' ? 'bounceIn 0.6s ease-in-out' : ''
         }}
       >
         {/* Close button */}
         <button 
           onClick={() => setAnimationState('exit')}
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 z-50"
+          className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 z-10"
           aria-label="Close"
         >
           <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -83,7 +93,9 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
         <div className="flex w-full">
           {/* Animated character */}
           <div 
-            className="w-1/3 flex items-center justify-center"
+            className={`w-1/3 flex items-center justify-center character-eyes
+              ${animationState === 'talking' ? 'character-talking' : ''}
+            `}
             style={{
               animation: animationState === 'talking' ? 'headShake 1s ease-in-out 3s' : ''
             }}
@@ -101,19 +113,68 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
               <circle className="eye" cx="48" cy="45" r="3" fill="#333" />
               <circle className="eye" cx="72" cy="45" r="3" fill="#333" />
               
-              {/* Eyebrows - friendly expression */}
-              <path d="M45 38C45 38 48 36 51 38" stroke="#333" strokeWidth="2" strokeLinecap="round" />
-              <path d="M69 38C69 38 72 36 75 38" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+              {/* Eyebrows - expression based */}
+              {expression === "questioning" && (
+                <>
+                  <path d="M45 38C45 38 48 36 51 38" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M69 35C69 35 72 38 75 35" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                </>
+              )}
+              
+              {expression === "confused" && (
+                <>
+                  <path d="M45 38C45 38 48 36 51 38" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M69 38C69 38 72 36 75 38" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                </>
+              )}
+              
+              {(expression === "thinking" || expression === "default") && (
+                <>
+                  <path d="M45 40C45 40 48 36 51 40" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M69 40C69 40 72 36 75 40" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                </>
+              )}
+              
+              {expression === "pointing" && (
+                <>
+                  <path d="M45 38C45 38 48 36 51 38" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M69 38C69 38 72 36 75 38" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                </>
+              )}
               
               {/* Mouth - talking animation */}
-              <path className="mouth" d="M53 60C57 65 63 65 67 60" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+              {expression === "questioning" && (
+                <path className="mouth" d="M53 65C55 63 65 63 67 65" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+              )}
+              
+              {expression === "confused" && (
+                <path className="mouth" d="M53 65C57 67 63 67 67 65" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+              )}
+              
+              {(expression === "thinking" || expression === "default") && (
+                <path className="mouth" d="M53 65C55 63 65 63 67 65" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+              )}
+              
+              {expression === "pointing" && (
+                <path className="mouth" d="M55 65C55 65 60 62 65 65" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+              )}
               
               {/* Body - business casual */}
               <rect x="45" y="80" width="30" height="45" fill="#3B82F6" rx="5" /> {/* Blue shirt */}
               <rect x="40" y="125" width="40" height="30" fill="#374151" rx="2" /> {/* Dark pants */}
               
               {/* Arms */}
-              <rect x="30" y="85" width="15" height="40" fill="#FFD7B5" rx="7" transform="rotate(-15 30 85)" />
+              {expression === "pointing" ? (
+                // Pointing arm
+                <g className={animationState === 'talking' ? 'animate-float' : ''}>
+                  <rect x="30" y="85" width="15" height="40" fill="#FFD7B5" rx="7" transform="rotate(-30 30 85)" />
+                  <circle cx="15" cy="118" r="6" fill="#FFD7B5" />
+                </g>
+              ) : (
+                // Regular arm
+                <rect x="30" y="85" width="15" height="40" fill="#FFD7B5" rx="7" transform="rotate(15 30 85)" />
+              )}
+              
               <rect x="82" y="83" width="15" height="40" fill="#FFD7B5" rx="7" transform="rotate(-15 82 83)" />
               
               {/* Hands */}

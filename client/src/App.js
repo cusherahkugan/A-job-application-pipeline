@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import ApplicationForm from './components/ApplicationForm';
 import SuccessAnimation from './components/SuccessAnimation';
 import AnimatedErrorMessage from './components/AnimatedErrorMessage';
-import {  JobAnimationBackground, PulsatingGradient } from './components/BackgroundAnimation';
+import { RotatingRingsBackground, PulsatingGradient } from './components/BackgroundAnimation';
 import './index.css';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
-  // Check user's preferred color scheme on initial load
+  // Check user's preferred color scheme on initial load and track window size
   useEffect(() => {
     // Default to light mode
     setDarkMode(false);
@@ -18,8 +19,27 @@ function App() {
     // Add class for animations
     document.body.classList.add('transitions-enabled');
     
+    // Track window width for responsive adjustments
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Force a viewport reset to fix mobile scaling issues
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
+      document.head.appendChild(meta);
+    }
+    
     return () => {
       document.body.classList.remove('transitions-enabled');
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
   
@@ -41,17 +61,30 @@ function App() {
   // Handle error message display
   const handleError = (message) => {
     setErrorMessage(message);
-    setTimeout(() => setErrorMessage(''), 5000);
+    // ErrorMessage component now handles its own timeout via React Portal
+  };
+
+  // Determine container width and padding based on screen size
+  const getContainerClasses = () => {
+    if (windowWidth < 640) { // Mobile
+      return "w-full max-w-full px-3";
+    } else if (windowWidth < 1024) { // Tablet
+      return "w-full max-w-xl px-4";
+    } else { // Desktop
+      return "w-full max-w-xl px-4";
+    }
   };
 
   return (
     <div 
       className={`min-h-screen transition-colors duration-500 ease-in-out ${
         darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
-      } py-6 flex flex-col justify-center sm:py-12 overflow-hidden relative`}
+      } py-4 sm:py-8 flex flex-col justify-center overflow-hidden relative`}
     >
-      {/* Enhanced animated backgrounds */}
-      <JobAnimationBackground darkMode={darkMode} />
+      {/* Full viewport rotating rings background */}
+      <div className="rotating-rings-background-container absolute inset-0 overflow-hidden">
+        <RotatingRingsBackground darkMode={darkMode} />
+      </div>
       
       {/* Improved dark mode toggle with animation */}
       <div className="absolute top-4 right-4 flex items-center space-x-2 bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg z-50 transition-all duration-300 hover:shadow-xl">
@@ -60,6 +93,7 @@ function App() {
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
             darkMode ? 'bg-lime-500' : 'bg-gray-300'
           }`}
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
         >
           <span 
             className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 ${
@@ -82,19 +116,20 @@ function App() {
         </div>
       </div>
       
-      <div className="relative py-3 px-4 sm:px-0 w-full max-w-xl mx-auto">
-        {/* Improved background gradient */}
-        <PulsatingGradient darkMode={darkMode} />
-        
-        {/* Enhanced job icons animation */}
-        <JobAnimationBackground darkMode={darkMode} />
+      <div className={`relative py-3 ${getContainerClasses()} mx-auto z-20`}>
+        {/* Full container pulsating gradient background */}
+        <div className="absolute inset-0 pulsating-gradient-container">
+          <PulsatingGradient darkMode={darkMode} />
+        </div>
         
         {/* Form container with consistent styling */}
         <div 
-          className="relative px-6 py-8 sm:px-8 md:p-10 bg-white shadow-xl sm:rounded-xl transition-all duration-300 z-10"
+          className="form-container relative px-4 py-6 sm:px-8 md:p-10 bg-white shadow-xl sm:rounded-xl transition-all duration-300 z-30"
           style={{
             backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)'
+            WebkitBackdropFilter: 'blur(12px)',
+            width: windowWidth < 640 ? '92%' : 'auto',
+            margin: '0 auto'
           }}
         >
           <div className="max-w-md mx-auto">
@@ -121,7 +156,7 @@ function App() {
         </div>
       </div>
       
-      {/* Error message component */}
+      {/* Error message component - Using fixed positioning for full-screen overlay */}
       {errorMessage && (
         <AnimatedErrorMessage 
           message={errorMessage} 

@@ -1,160 +1,117 @@
 import React, { useEffect, useState } from 'react';
 
-// Animated job-related icons and interview scenarios for the background
-const JobAnimationBackground = ({ darkMode }) => {
-  const [animations, setAnimations] = useState([]);
+// Floating rings background animation
+const FloatingRingsBackground = ({ darkMode }) => {
+  const [rings, setRings] = useState([]);
   
   useEffect(() => {
-    // Create random interview and work scenes
-    const generateAnimations = () => {
-      const scenesCount = window.innerWidth < 768 ? 3 : 5;
-      const newAnimations = [];
+    // Generate random ring elements
+    const generateRings = () => {
+      const ringsCount = window.innerWidth < 768 ? 5 : 8;
+      const newRings = [];
       
-      for (let i = 0; i < scenesCount; i++) {
-        // Randomly choose between different animation types
-        const sceneType = Math.floor(Math.random() * 3); // 0 = interview, 1 = working, 2 = job search
+      for (let i = 0; i < ringsCount; i++) {
+        // Calculate random properties for each ring
+        const size = 150 + Math.random() * 300; // Size between 150px and 450px
+        const xPos = Math.random() * 100; // Initial position between 0% and 100%
+        const yPos = Math.random() * 100;
+        // Increased thickness significantly from 6-16px to 10-25px
+        const thickness = 10 + Math.random() * 30; 
+        // Random movement direction
+        const xDirection = Math.random() > 0.5 ? 1 : -1;
+        const yDirection = Math.random() > 0.5 ? 1 : -1;
+        // Random movement duration
+        const duration = 15 + Math.random() * 30; // Animation duration between 15s and 45s
+        // Random movement distance in percentage
+        const xDistance = 10 + Math.random() * 30; // Move 10-40% horizontally
+        const yDistance = 10 + Math.random() * 30; // Move 10-40% vertically
+        const delay = Math.random() * -20; // Random delay
         
-        // Calculate random position (non-overlapping)
-        const segment = 100 / scenesCount;
-        const xPos = (i * segment) + (Math.random() * (segment * 0.6));
-        const yPos = Math.random() * 80 + 10;
-        
-        newAnimations.push({
+        newRings.push({
           id: i,
-          type: sceneType,
+          size,
           x: xPos,
           y: yPos,
-          delay: i * 2,
-          scale: 0.5 + Math.random() * 0.5,
-          opacity: 0.1 + Math.random() * 0.1
+          thickness,
+          xDirection,
+          yDirection,
+          duration,
+          xDistance,
+          yDistance,
+          delay
         });
       }
       
-      setAnimations(newAnimations);
+      setRings(newRings);
     };
     
-    generateAnimations();
+    generateRings();
     
     // Regenerate on window resize
     const handleResize = () => {
-      generateAnimations();
+      generateRings();
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Render different SVG scenes based on type
-  const renderScene = (type, scale, opacity) => {
-    const color = darkMode ? 'rgba(132, 204, 22, 0.15)' : 'rgba(16, 185, 129, 0.15)';
-    
-    switch(type) {
-      case 0: // Interview scene
-        return (
-          <svg viewBox="0 0 200 100" style={{ transform: `scale(${scale})`, opacity }}>
-            {/* Desk */}
-            <rect x="20" y="70" width="160" height="10" fill={color} />
-            
-            {/* Interviewer */}
-            <circle cx="50" cy="50" r="15" fill={color} /> {/* Head */}
-            <rect x="42" y="65" width="16" height="25" fill={color} /> {/* Body */}
-            
-            {/* Interviewee */}
-            <circle cx="150" cy="50" r="15" fill={color} /> {/* Head */}
-            <rect x="142" y="65" width="16" height="25" fill={color} /> {/* Body */}
-            
-            {/* Document on desk */}
-            <rect x="90" y="60" width="20" height="25" fill={color} stroke={color} strokeWidth="1" />
-          </svg>
-        );
-        
-      case 1: // Working person
-        return (
-          <svg viewBox="0 0 200 100" style={{ transform: `scale(${scale})`, opacity }}>
-            {/* Computer */}
-            <rect x="70" y="60" width="40" height="30" fill={color} />
-            <rect x="85" y="90" width="10" height="5" fill={color} />
-            <rect x="75" y="95" width="30" height="2" fill={color} />
-            
-            {/* Person */}
-            <circle cx="90" cy="40" r="10" fill={color} /> {/* Head */}
-            <rect x="85" y="50" width="10" height="15" fill={color} /> {/* Body */}
-            <line x1="85" y1="55" x2="75" y2="65" stroke={color} strokeWidth="3" /> {/* Left arm */}
-            <line x1="95" y1="55" x2="105" y2="65" stroke={color} strokeWidth="3" /> {/* Right arm */}
-          </svg>
-        );
-        
-      case 2: // Job search/CV review
-        return (
-          <svg viewBox="0 0 200 100" style={{ transform: `scale(${scale})`, opacity }}>
-            {/* Person */}
-            <circle cx="60" cy="40" r="12" fill={color} /> {/* Head */}
-            <rect x="53" y="52" width="14" height="20" fill={color} /> {/* Body */}
-            
-            {/* Document/CV */}
-            <rect x="100" y="30" width="40" height="50" fill={color} stroke={color} strokeWidth="1" />
-            <line x1="110" y1="40" x2="130" y2="40" stroke={color} strokeWidth="2" />
-            <line x1="110" y1="50" x2="130" y2="50" stroke={color} strokeWidth="2" />
-            <line x1="110" y1="60" x2="120" y2="60" stroke={color} strokeWidth="2" />
-            
-            {/* Person's arm pointing to CV */}
-            <line x1="67" y1="52" x2="95" y2="45" stroke={color} strokeWidth="3" />
-          </svg>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="job-animation-container absolute inset-0 overflow-hidden" style={{ pointerEvents: 'none' }}>
-      {/* Animated interview/work scenes */}
-      {animations.map((scene) => (
-        <div 
-          key={scene.id}
-          className="absolute"
+    <div className="rings-animation-container absolute inset-0 overflow-hidden z-0" style={{ pointerEvents: 'none' }}>
+      {rings.map((ring) => (
+        <div
+          key={ring.id}
+          className="absolute rounded-full border-2 opacity-30"
           style={{
-            left: `${scene.x}%`,
-            top: `${scene.y}%`,
-            width: '200px',
-            height: '100px',
-            animation: `float-scene 20s infinite ease-in-out ${scene.delay}s`,
+            width: `${ring.size}px`,
+            height: `${ring.size}px`,
+            borderWidth: `${ring.thickness}px`,
+            // Updated colors to use lime-500 and the green from the gradient
+            borderColor: darkMode 
+              ? 'rgba(132, 204, 22, 0.7)' // Brightened lime color for dark mode
+              : `rgba(${Math.random() > 0.5 ? '132, 204, 22' : '16, 185, 129'}, 0.7)`, // Random between lime-500 and green-500, brightened
+            borderStyle: 'solid',
+            animation: `float-${ring.id} ${ring.duration}s ease-in-out infinite ${ring.delay}s`,
+            // Initial position
+            left: `calc(${ring.x}% - ${ring.size / 2}px)`,
+            top: `calc(${ring.y}% - ${ring.size / 2}px)`,
           }}
-        >
-          {renderScene(scene.type, scene.scale, scene.opacity)}
-        </div>
+        />
       ))}
       
-      {/* Job icons and emojis */}
-      <div className="icon briefcase"></div>
-      <div className="icon document"></div>
-      <div className="icon graph" style={{ 
-        top: '40%', 
-        left: '70%',
-        width: '35px',
-        height: '35px',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981' opacity='0.5'%3E%3Cpath d='M3 3v18h18v-2H5V3H3z'/%3E%3Cpath d='M15 10l-4 4-3-3-3 3v4h14v-8'/%3E%3C/svg%3E")`,
-        animationDelay: '1.5s'
-      }}></div>
+      {/* Create keyframe animations for each ring */}
+      <style>
+        {rings.map((ring) => `
+          @keyframes float-${ring.id} {
+            0%, 100% {
+              transform: translate(0, 0);
+            }
+            50% {
+              transform: translate(
+                ${ring.xDirection * ring.xDistance}%, 
+                ${ring.yDirection * ring.yDistance}%
+              );
+            }
+          }
+        `).join('')}
+      </style>
     </div>
   );
 };
 
 const PulsatingGradient = ({ darkMode }) => {
-    return (
-      <div
-        className={`absolute inset-0 ${
-          darkMode
-            ? 'bg-lime-500 opacity-30'
-            : 'bg-gradient-to-r from-lime-400 to-green-500'
-        } shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl`}
-        style={{
-          animation: darkMode ? 'none' : 'pulse 5s ease-in-out infinite'
-        }}
-      />
-    );
-  };
-  
+  return (
+    <div
+      className={`absolute inset-0 ${
+        darkMode
+          ? 'bg-lime-500 opacity-30'
+          : 'bg-gradient-to-r from-lime-500 to-green-500'
+      } shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl`}
+      style={{
+        animation: darkMode ? 'none' : 'pulse 5s ease-in-out infinite'
+      }}
+    />
+  );
+};
 
-  export { JobAnimationBackground, PulsatingGradient };
+export { FloatingRingsBackground as RotatingRingsBackground, PulsatingGradient };

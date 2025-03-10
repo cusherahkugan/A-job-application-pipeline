@@ -44,14 +44,14 @@
 
 /* Background animations */
 @keyframes floatBubble {
-  0% { 
+  0% {
     transform: translateY(0) translateX(0);
-    opacity: 0; 
+    opacity: 0;
   }
   25% { opacity: 0.8; }
   75% { opacity: 0.6; }
-  100% { 
-    transform: translateY(-100px) translateX(20px); 
+  100% {
+    transform: translateY(-100px) translateX(20px);
     opacity: 0;
   }
 }
@@ -136,6 +136,32 @@
 
 .character-eyes .eye {
   animation: blinking 4s infinite;
+}
+
+/* Fixed Error Message Overlay */
+/* This ensures the error overlay covers the entire viewport */
+.error-message-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure the error message container appears above everything */
+.error-message-container {
+  position: relative;
+  z-index: 9999;
+  max-width: 90%;
+  width: auto;
 }
 
 /* Mobile responsiveness enhancements */
