@@ -274,8 +274,21 @@ const ApplicationForm = ({ darkMode, onSubmitSuccess }) => {
         data.append('phone', `${formData.phoneCountryCode}${formData.phoneNumber}`);
         data.append('cv', formData.cv);
 
-        // Submit form to API (simulated for demonstration)
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Submit form to API
+        const response = await fetch('/api/applications/submit', {
+          method: 'POST',
+          body: data
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to submit application');
+        }
+        
+        const result = await response.json();
+        console.log('Submission successful:', result);
+        
+        // Show success message
+        toast.success('Application submitted successfully!');
         
         // Trigger success animation
         if (onSubmitSuccess) {
@@ -306,7 +319,7 @@ const ApplicationForm = ({ darkMode, onSubmitSuccess }) => {
       setErrorMessage(getPersonalizedErrorMessage());
       setShowErrorAnimation(true);
       
-      // Highlight invalid fields (without shake animation)
+      // Highlight invalid fields
       Object.keys(errors).forEach(fieldName => {
         setValidFields(prev => ({ ...prev, [fieldName]: false }));
       });
@@ -615,7 +628,7 @@ const ApplicationForm = ({ darkMode, onSubmitSuccess }) => {
                 </div>
                 
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-lime-600 mb-2">Attention</h3>
+                  <h3 className="text-lg font-bold text-lime-600 mb-2">Oops!</h3>
                   <p className="text-gray-700">{errorMessage}</p>
                 </div>
               </div>

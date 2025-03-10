@@ -1,26 +1,37 @@
+// utils/webhookService.js
 const axios = require('axios');
-const dotenv = require('dotenv');
+require('dotenv').config();
 
-dotenv.config();
+// Constants
+const WEBHOOK_URL = process.env.WEBHOOK_URL;
+const CANDIDATE_EMAIL = process.env.CANDIDATE_EMAIL;
 
-// Function to send webhook notification about processed CV
-exports.sendWebhookNotification = async function(data) {
+// Function to send webhook notification
+async function sendWebhookNotification(data, isTest = false) {
   try {
-    const response = await axios.post(
-      process.env.WEBHOOK_URL,
-      data,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Candidate-Email': process.env.CANDIDATE_EMAIL
-        }
-      }
-    );
+    // Set submission status based on whether this is a test
+    if (isTest) {
+      data.metadata.status = 'testing';
+    } else {
+      data.metadata.status = 'prod';
+    }
     
-    console.log('Webhook notification sent successfully');
+    // Make POST request to webhook endpoint
+    const response = await axios.post(WEBHOOK_URL, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Candidate-Email': CANDIDATE_EMAIL // Use the candidate's email as identifier
+      }
+    });
+    
+    console.log('Webhook notification sent successfully:', response.status);
     return response.data;
   } catch (error) {
-    console.error('Error sending webhook notification:', error);
+    console.error('Error sending webhook notification:', error.response?.data || error.message);
     throw error;
   }
+}
+
+module.exports = {
+  sendWebhookNotification
 };

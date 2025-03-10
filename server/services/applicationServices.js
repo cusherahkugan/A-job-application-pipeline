@@ -1,31 +1,13 @@
-const { s3, textract, bucketName } = require('../config/awsconfig');
+// services/applicationService.js
+const { uploadToFirebase } = require('../config/firebaseConfig');
 const { appendToSheet } = require('../config/googleSheetsConfig');
 const { extractCvData } = require('../utils/cvParser');
-const { sendWebhookNotification } = require('../utils/WebhookService');
-const { v4: uuidv4 } = require('uuid');
-const path = require('path');
-
-// Function to upload file to S3
-async function uploadToS3(file) {
-  const fileExtension = path.extname(file.originalname);
-  const fileName = `${uuidv4()}${fileExtension}`;
-  
-  const params = {
-    Bucket: bucketName,
-    Key: fileName,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    ACL: 'public-read' // Make file publicly accessible
-  };
-
-  const uploadResult = await s3.upload(params).promise();
-  return uploadResult.Location; // Return the public URL
-}
+const { sendWebhookNotification } = require('../utils/webhookService');
 
 // Function to process a job application
-exports.processApplication = async (name, email, phone, cvFile) => {
-  // 1. Upload CV to S3
-  const cvPublicLink = await uploadToS3(cvFile);
+async function processApplication(name, email, phone, cvFile) {
+  // 1. Upload CV to Firebase Storage
+  const cvPublicLink = await uploadToFirebase(cvFile);
   
   // 2. Extract data from CV
   const cvData = await extractCvData(cvFile.buffer, cvFile.mimetype);
@@ -63,16 +45,25 @@ exports.processApplication = async (name, email, phone, cvFile) => {
     metadata: {
       applicant_name: name,
       email: email,
-      status: "prod", // Change to "testing" during development
+      status: "testing", 
       cv_processed: true,
       processed_timestamp: new Date().toISOString()
     }
   };
   
-  await sendWebhookNotification(webhookData);
+  // Determine if this is a test or production submission
+  const isTestMode = process.env.NODE_ENV === 'development' || 
+                     email.includes('test') || 
+                     email.endsWith('@example.com');
+  
+  await sendWebhookNotification(webhookData, isTestMode);
   
   return {
     cvPublicLink,
     cvData
   };
+}
+
+module.exports = {
+  processApplication
 };

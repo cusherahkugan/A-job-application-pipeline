@@ -1,8 +1,7 @@
+// services/emailService.js
 const sgMail = require('@sendgrid/mail');
 const moment = require('moment-timezone');
-const dotenv = require('dotenv');
-
-dotenv.config();
+require('dotenv').config();
 
 // Configure SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -22,14 +21,25 @@ function guessTimezone(phone) {
     timezone = 'Europe/London'; // UK
   } else if (phone.startsWith('+91')) {
     timezone = 'Asia/Kolkata'; // India
-  } 
-  // Add more country codes as needed
+  } else if (phone.startsWith('+94')) {
+    timezone = 'Asia/Colombo'; // Sri Lanka
+  } else if (phone.startsWith('+61')) {
+    timezone = 'Australia/Sydney'; // Australia
+  } else if (phone.startsWith('+49')) {
+    timezone = 'Europe/Berlin'; // Germany
+  } else if (phone.startsWith('+33')) {
+    timezone = 'Europe/Paris'; // France
+  } else if (phone.startsWith('+81')) {
+    timezone = 'Asia/Tokyo'; // Japan
+  } else if (phone.startsWith('+86')) {
+    timezone = 'Asia/Shanghai'; // China
+  }
   
   return timezone;
 }
 
 // Function to schedule follow-up email for the next day
-exports.scheduleFollowUpEmail = async function(email, name, phone) {
+async function scheduleFollowUpEmail(email, name, phone) {
   try {
     // Get timezone from phone number
     const timezone = guessTimezone(phone);
@@ -76,4 +86,36 @@ HR Team`,
     console.error('Error scheduling follow-up email:', error);
     throw error;
   }
+}
+
+// Function to send a test email immediately
+async function sendTestEmail(email, name) {
+  try {
+    const msg = {
+      to: email,
+      from: process.env.EMAIL_FROM,
+      subject: 'Test Email - Job Application System',
+      text: `Dear ${name},
+      
+This is a test email from the job application system. If you received this, the email functionality is working correctly.
+
+Best regards,
+HR Team`,
+      html: `<p>Dear ${name},</p>
+<p>This is a test email from the job application system. If you received this, the email functionality is working correctly.</p>
+<p>Best regards,<br>HR Team</p>`
+    };
+    
+    await sgMail.send(msg);
+    console.log(`Test email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending test email:', error);
+    throw error;
+  }
+}
+
+module.exports = {
+  scheduleFollowUpEmail,
+  sendTestEmail
 };
