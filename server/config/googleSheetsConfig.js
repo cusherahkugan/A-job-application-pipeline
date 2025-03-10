@@ -1,19 +1,18 @@
 // config/googleSheetsConfig.js
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const fs = require('fs');
 require('dotenv').config();
 
-// Load credentials from the downloaded key file
 let credentials;
 try {
-  credentials = JSON.parse(fs.readFileSync('./googleSheetsConfig.json'));
+  // Parse credentials from environment variable
+  credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS);
+  console.log("Google credentials loaded successfully");
 } catch (error) {
-  console.error('Error loading Google Sheets credentials:', error);
+  console.error('Error parsing Google service account credentials:', error);
   process.exit(1);
 }
 
-// Initialize the Google Sheet
-const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
+const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEETS_ID);
 
 // Function to append data to the Google Sheet
 async function appendToSheet(rowData) {
