@@ -81,13 +81,13 @@ function App() {
         darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
       } py-4 sm:py-8 flex flex-col justify-center overflow-hidden relative`}
     >
-      {/* Full viewport rotating rings background */}
-      <div className="rotating-rings-background-container absolute inset-0 overflow-hidden">
+      {/* Full viewport rotating rings background - increased z-index */}
+      <div className="rotating-rings-background-container absolute inset-0 overflow-hidden" style={{ zIndex: 10 }}>
         <RotatingRingsBackground darkMode={darkMode} />
       </div>
       
       {/* Improved dark mode toggle with animation */}
-      <div className="absolute top-4 right-4 flex items-center space-x-2 bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg z-50 transition-all duration-300 hover:shadow-xl">
+      <div className="absolute top-4 right-4 flex items-center space-x-2 bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg z-50 transition-all duration-300 hover:shadow-xl" style={{ zIndex: 1000 }}>
         <button 
           onClick={toggleDarkMode}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
@@ -103,13 +103,13 @@ function App() {
           <span className="sr-only">Toggle Dark Mode</span>
         </button>
         
-        <div className="flex items-center justify-center w-6 h-6 text-gray-700 dark:text-yellow-300">
+        <div className="flex items-center justify-center w-6 h-6">
           {darkMode ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform transition-transform hover:rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform transition-transform hover:rotate-45 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform transition-transform hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform transition-transform hover:rotate-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           )}
@@ -117,19 +117,20 @@ function App() {
       </div>
       
       <div className={`relative py-3 ${getContainerClasses()} mx-auto z-20`}>
-        {/* Full container pulsating gradient background */}
-        <div className="absolute inset-0 pulsating-gradient-container">
+        {/* Full container pulsating gradient background - increased z-index */}
+        <div className="absolute inset-0 pulsating-gradient-container" style={{ zIndex: 90 }}>
           <PulsatingGradient darkMode={darkMode} />
         </div>
         
-        {/* Form container with consistent styling */}
+        {/* Form container with consistent styling - increased z-index */}
         <div 
-          className="form-container relative px-4 py-6 sm:px-8 md:p-10 bg-white shadow-xl sm:rounded-xl transition-all duration-300 z-30"
+          className={`form-container relative px-4 py-6 sm:px-8 md:p-10 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl sm:rounded-xl transition-all duration-300`}
           style={{
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
+            zIndex: 100,
+            boxShadow: darkMode ? '0 10px 25px rgba(0, 0, 0, 0.5)' : '0 10px 25px rgba(0, 0, 0, 0.2)',
             width: windowWidth < 640 ? '92%' : 'auto',
-            margin: '0 auto'
+            margin: '0 auto',
+            backdropFilter: darkMode ? 'none' : 'blur(4px)'
           }}
         >
           <div className="max-w-md mx-auto">
@@ -138,10 +139,10 @@ function App() {
             ) : (
               <>
                 <div className="text-center animate-fade-in">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4 sm:mb-6">
+                  <h1 className={`text-2xl sm:text-3xl font-extrabold ${darkMode ? 'text-white' : 'text-gray-900'} mb-4 sm:mb-6`}>
                     Job Application
                   </h1>
-                  <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base" style={{ animationDelay: '0.2s' }}>
+                  <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6 sm:mb-8 text-sm sm:text-base`} style={{ animationDelay: '0.2s' }}>
                     Join our team by completing this application form below.
                   </p>
                 </div>
@@ -156,7 +157,7 @@ function App() {
         </div>
       </div>
       
-      {/* Error message component - Using fixed positioning for full-screen overlay */}
+      {/* Error message component - will be rendered via React Portal with high z-index */}
       {errorMessage && (
         <AnimatedErrorMessage 
           message={errorMessage} 

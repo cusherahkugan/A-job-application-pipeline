@@ -19,9 +19,13 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
       }, 500);
     }, 4000);
     
+    // Disable body scrolling when error message is visible
+    document.body.style.overflow = 'hidden';
+    
     return () => {
       clearTimeout(talkingTimer);
       clearTimeout(closeTimer);
+      document.body.style.overflow = '';
     };
   }, [onClose]);
   
@@ -58,16 +62,14 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
   const expression = getCharacterExpression();
   
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 10000 }}>
+      {/* Background overlay with opacity but NO backdrop blur */}
       <div 
-        className="absolute inset-0 duration-300" 
-        style={{ 
-         
-         
-        }}
+        className="absolute inset-0 bg-black"
+        style={{ opacity: 0.7 }}
         onClick={() => setAnimationState('exit')}
-      />
-      
+      ></div>
+     
       <div 
         className={`bg-white rounded-lg p-4 sm:p-6 shadow-xl max-w-sm w-full mx-4 z-10 transition-all duration-500 transform flex relative
           ${animationState === 'enter' ? 'translate-y-0 scale-100' : ''} 
@@ -75,7 +77,8 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
           ${animationState === 'talking' ? 'scale-100' : 'scale-95'}
         `}
         style={{
-          animation: animationState === 'enter' ? 'bounceIn 0.6s ease-in-out' : ''
+          animation: animationState === 'enter' ? 'bounceIn 0.6s ease-in-out' : '',
+          zIndex: 10001 // Even higher z-index than the overlay
         }}
       >
         {/* Close button */}
@@ -209,6 +212,36 @@ const AnimatedErrorMessage = ({ message, onClose }) => {
           </div>
         </div>
       </div>
+      
+      {/* Add necessary animation keyframes */}
+      <style jsx>{`
+        @keyframes bounceIn {
+          0% { transform: scale(0.3); opacity: 0; }
+          40% { transform: scale(1.1); }
+          60% { transform: scale(0.9); }
+          80% { transform: scale(1.03); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+        }
+        
+        @keyframes headShake {
+          0% { transform: translateX(0); }
+          6.5% { transform: translateX(-6px) rotateY(-9deg); }
+          18.5% { transform: translateX(5px) rotateY(7deg); }
+          31.5% { transform: translateX(-3px) rotateY(-5deg); }
+          43.5% { transform: translateX(2px) rotateY(3deg); }
+          50% { transform: translateX(0); }
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
     </div>
   );
 };
