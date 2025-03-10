@@ -68,8 +68,8 @@ const FloatingRingsBackground = ({ darkMode }) => {
             borderWidth: `${ring.thickness}px`,
             // Updated colors to use lime-500 and the green from the gradient
             borderColor: darkMode 
-              ? 'rgba(132, 204, 22, 0.7)' // Brightened lime color for dark mode
-              : `rgba(${Math.random() > 0.5 ? '132, 204, 22' : '16, 185, 129'}, 0.7)`, // Random between lime-500 and green-500, brightened
+              ? 'bg-gradient-to-r from-lime-500 to-green-500' // Brightened lime color for dark mode
+              : `rgba(${Math.random() > 0.5 ? '132, 204, 22' : '16, 185, 129'})`, // Random between lime-500 and green-500, brightened
             borderStyle: 'solid',
             animation: `float-${ring.id} ${ring.duration}s ease-in-out infinite ${ring.delay}s`,
             // Initial position
@@ -104,11 +104,11 @@ const PulsatingGradient = ({ darkMode }) => {
     <div
       className={`absolute inset-0 ${
         darkMode
-          ? 'bg-lime-500 opacity-30'
+          ? 'bg-gradient-to-r from-lime-500 to-green-500'
           : 'bg-gradient-to-r from-lime-500 to-green-500'
       } shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl`}
       style={{
-        animation: darkMode ? 'none' : 'pulse 5s ease-in-out infinite'
+        animation: darkMode ? 'pulse 5s ease-in-out infinite' : 'pulse 5s ease-in-out infinite'
       }}
     />
   );

@@ -109,7 +109,7 @@ function App() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform transition-transform hover:rotate-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform transition-transform hover:rotate-12 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           )}
@@ -122,7 +122,7 @@ function App() {
           <PulsatingGradient darkMode={darkMode} />
         </div>
         
-        {/* Form container with consistent styling - increased z-index */}
+        {/* Form container with consistent styling - increased z-index and no backdrop in dark mode */}
         <div 
           className={`form-container relative px-4 py-6 sm:px-8 md:p-10 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl sm:rounded-xl transition-all duration-300`}
           style={{
@@ -130,7 +130,8 @@ function App() {
             boxShadow: darkMode ? '0 10px 25px rgba(0, 0, 0, 0.5)' : '0 10px 25px rgba(0, 0, 0, 0.2)',
             width: windowWidth < 640 ? '92%' : 'auto',
             margin: '0 auto',
-            backdropFilter: darkMode ? 'none' : 'blur(4px)'
+            backdropFilter: 'none', // Completely removed backdrop blur for both modes
+            WebkitBackdropFilter: 'none' // For Safari support
           }}
         >
           <div className="max-w-md mx-auto">

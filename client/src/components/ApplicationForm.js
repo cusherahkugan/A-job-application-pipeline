@@ -207,19 +207,19 @@ const ApplicationForm = ({ darkMode, onSubmitSuccess }) => {
   };
 
   // Get personalized but professional error message
-  const getPersonalizedErrorMessage = () => {
-    if (!formData.name.trim()) {
-      return "You forgot Your name .please provide your name to personalize your application experience.";
-    } else if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
-      return "You forgot Your email .Please provide a valid email address so we can contact you about your application.";
-    } else if (!formData.phoneNumber.trim() || !/^[0-9\s\-()]{8,15}$/.test(formData.phoneNumber)) {
-      return "You forgot Your phone number.A valid phone number will help us reach you promptly during the selection process.";
-    } else if (!formData.cv) {
-      return "You forgot to attach your resume .Please attach your CV to help us learn more about your qualifications and experience.";
-    } else {
-      return "Please complete all required fields before submitting your application.";
-    }
-  };
+const getPersonalizedErrorMessage = () => {
+  if (!formData.name.trim()) {
+    return "You forgot to provide your name. Please enter your full name to personalize your application experience.";
+  } else if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+    return "You forgot to provide a valid email address. Please enter a correct email so we can contact you about your application.";
+  } else if (!formData.phoneNumber.trim() || !/^[0-9\s\-()]{8,15}$/.test(formData.phoneNumber)) {
+    return "You forgot to provide a valid phone number. This will help us reach you promptly during the selection process.";
+  } else if (!formData.cv) {
+    return "You forgot to attach your resume. Please upload your CV to help us learn more about your qualifications and experience.";
+  } else {
+    return "Please complete all required fields before submitting your application.";
+  }
+};
 
   // Validate form
   const validateForm = () => {
