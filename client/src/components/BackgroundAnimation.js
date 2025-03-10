@@ -7,39 +7,113 @@ const FloatingRingsBackground = ({ darkMode }) => {
   useEffect(() => {
     // Generate random ring elements
     const generateRings = () => {
-      const ringsCount = window.innerWidth < 768 ? 5 : 8;
+      const isMobile = window.innerWidth < 768;
       const newRings = [];
       
-      for (let i = 0; i < ringsCount; i++) {
-        // Calculate random properties for each ring
-        const size = 150 + Math.random() * 300; // Size between 150px and 450px
-        const xPos = Math.random() * 100; // Initial position between 0% and 100%
-        const yPos = Math.random() * 100;
-        // Increased thickness significantly from 6-16px to 10-25px
-        const thickness = 10 + Math.random() * 30; 
-        // Random movement direction
-        const xDirection = Math.random() > 0.5 ? 1 : -1;
-        const yDirection = Math.random() > 0.5 ? 1 : -1;
-        // Random movement duration
-        const duration = 15 + Math.random() * 30; // Animation duration between 15s and 45s
-        // Random movement distance in percentage
-        const xDistance = 10 + Math.random() * 30; // Move 10-40% horizontally
-        const yDistance = 10 + Math.random() * 30; // Move 10-40% vertically
-        const delay = Math.random() * -20; // Random delay
+      if (isMobile) {
+        // For mobile, create rings only at top and bottom
+        const topRingsCount = 4;
+        const bottomRingsCount = 4;
         
-        newRings.push({
-          id: i,
-          size,
-          x: xPos,
-          y: yPos,
-          thickness,
-          xDirection,
-          yDirection,
-          duration,
-          xDistance,
-          yDistance,
-          delay
-        });
+        // Top rings
+        for (let i = 0; i < topRingsCount; i++) {
+          const size = 20 + Math.random() * 10; // Size between 80px and 230px
+          const xPos = Math.random() * 1000; // Random horizontal position
+          
+          const thickness = 5 + Math.random() * 15; // Thickness between 5px and 20px
+          
+          // Movement properties
+          const xDirection = Math.random() > 0.5 ? 1 : -1;
+          const yDirection = 1; // Move downward
+          
+          const duration = 10 + Math.random() * 20; // Animation duration between 10s and 30s
+          const xDistance = 5 + Math.random() * 20; // Move 5-25% horizontally
+          const yDistance = 5 + Math.random() * 20; // Move 5-25% vertically
+          
+          const delay = Math.random() * -20; // Random delay
+          
+          newRings.push({
+            id: `top-${i}`,
+            size,
+            x: xPos,
+            y: 10 + Math.random() * 20, // Constrain to top 30% of screen
+            thickness,
+            xDirection,
+            yDirection,
+            duration,
+            xDistance,
+            yDistance,
+            delay,
+            position: 'top'
+          });
+        }
+        
+        // Bottom rings
+        for (let i = 0; i < bottomRingsCount; i++) {
+          const size = 80 + Math.random() * 150; // Size between 80px and 230px
+          const xPos = Math.random() * 100; // Random horizontal position
+          
+          const thickness = 5 + Math.random() * 15; // Thickness between 5px and 20px
+          
+          // Movement properties
+          const xDirection = Math.random() > 0.5 ? 1 : -1;
+          const yDirection = -1; // Move upward
+          
+          const duration = 10 + Math.random() * 20; // Animation duration between 10s and 30s
+          const xDistance = 5 + Math.random() * 20; // Move 5-25% horizontally
+          const yDistance = 5 + Math.random() * 20; // Move 5-25% vertically
+          
+          const delay = Math.random() * -20; // Random delay
+          
+          newRings.push({
+            id: `bottom-${i}`,
+            size,
+            x: xPos,
+            y: 80 + Math.random() * 20, // Constrain to bottom 30% of screen
+            thickness,
+            xDirection,
+            yDirection,
+            duration,
+            xDistance,
+            yDistance,
+            delay,
+            position: 'bottom'
+          });
+        }
+      } else {
+        // Desktop logic remains the same as original code
+        const ringsCount = 8;
+        
+        for (let i = 0; i < ringsCount; i++) {
+          const size = 150 + Math.random() * 300; // Size between 150px and 450px
+          const xPos = Math.random() * 100;
+          const yPos = Math.random() * 100;
+          
+          const thickness = 10 + Math.random() * 30; // Thickness between 10px and 40px
+          
+          const xDirection = Math.random() > 0.5 ? 1 : -1;
+          const yDirection = Math.random() > 0.5 ? 1 : -1;
+          
+          const duration = 15 + Math.random() * 30; // Animation duration between 15s and 45s
+          const xDistance = 10 + Math.random() * 30; // Move 10-40% horizontally
+          const yDistance = 10 + Math.random() * 30; // Move 10-40% vertically
+          
+          const delay = Math.random() * -20; // Random delay
+          
+          newRings.push({
+            id: i,
+            size,
+            x: xPos,
+            y: yPos,
+            thickness,
+            xDirection,
+            yDirection,
+            duration,
+            xDistance,
+            yDistance,
+            delay
+          });
+        }
       }
       
       setRings(newRings);
@@ -66,10 +140,9 @@ const FloatingRingsBackground = ({ darkMode }) => {
             width: `${ring.size}px`,
             height: `${ring.size}px`,
             borderWidth: `${ring.thickness}px`,
-            // Updated colors to use lime-500 and the green from the gradient
             borderColor: darkMode 
-              ? 'bg-gradient-to-r from-lime-500 to-green-500' // Brightened lime color for dark mode
-              : `rgba(${Math.random() > 0.5 ? '132, 204, 22' : '16, 185, 129'})`, // Random between lime-500 and green-500, brightened
+              ? 'rgb(132, 204, 22)' // Lime-500 for dark mode
+              : `rgba(${Math.random() > 0.5 ? '132, 204, 22' : '16, 185, 129'})`, // Random between lime-500 and green-500
             borderStyle: 'solid',
             animation: `float-${ring.id} ${ring.duration}s ease-in-out infinite ${ring.delay}s`,
             // Initial position
@@ -108,7 +181,7 @@ const PulsatingGradient = ({ darkMode }) => {
           : 'bg-gradient-to-r from-lime-500 to-green-500'
       } shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl`}
       style={{
-        animation: darkMode ? 'pulse 5s ease-in-out infinite' : 'pulse 5s ease-in-out infinite'
+        animation: darkMode ? 'pulse 5s ease-in-out infinite' : 'none'
       }}
     />
   );

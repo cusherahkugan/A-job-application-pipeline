@@ -155,20 +155,45 @@
   z-index: 10000; 
 }
 
-/* Mobile responsiveness enhancements */ 
-@media (max-width: 640px) {   
-  .phone-field-container {     
-    flex-direction: column;   
-  }      
+/* Add these styles to your CSS file for mobile-specific gradient background */
+
+/* Mobile-specific styles for narrow gradient strip with margins */
+@media (max-width: 640px) {
+  /* Container adjustments for mobile */
+  .form-container {
+    border-radius: 1rem !important; /* Force rounded corners on mobile */
+    margin: 0 auto !important; /* Center the form horizontally */
+    max-width: calc(100% - 44px) !important; /* Add 8px margin on each side */
+    width: calc(100% - 16px) !important; /* Ensure full width with margins */
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
   
-  .country-code-selector {     
-    width: 100%;     
-    margin-bottom: 0.5rem;     
-    border-radius: 0.375rem;   
-  }      
+  /* Gradient background adjustments for mobile */
+  .pulsating-gradient-container {
+    border-radius: 1.25rem !important; /* Slightly larger radius than form */
+    margin: 0 auto !important; /* Center the gradient container */
+    max-width: calc(100% - 16px) !important; /* Add 8px margin on each side */
+    width: calc(100% - 16px) !important; /* Ensure full width with margins */
+    padding: 2px !important; /* Inner padding */
+    overflow: hidden !important;
+  }
   
-  .phone-input {     
-    width: 100%;     
-    border-radius: 0.375rem;   
-  } 
+  /* Make the gradient background a narrow strip */
+  .pulsating-gradient-container > div {
+    border-radius: 1rem !important; /* Match form radius */
+    height: calc(100% ) !important; /* Account for 2px padding on top and bottom */
+    width: calc(100% - 4px) !important; /* Account for 2px padding on sides */
+    margin: 2px !important; /* Inner margin */
+  }
+  
+  /* Adjust the form position within the container */
+  .form-inner-container {
+    border-radius: 0.75rem !important;
+  }
+  
+  /* Ensure the paperclip properly positions on mobile */
+  .paperclip-header {
+    margin-top: -8px !important;
+  }
 }
