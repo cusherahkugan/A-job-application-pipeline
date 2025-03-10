@@ -17,14 +17,14 @@ const FloatingRingsBackground = ({ darkMode }) => {
         
         // Top rings
         for (let i = 0; i < topRingsCount; i++) {
-          const size = 20 + Math.random() * 10; // Size between 80px and 230px
-          const xPos = Math.random() * 1000; // Random horizontal position
+          const size = 80 + Math.random() * 50; // Size between 80px and 230px
+          const xPos = Math.random() * 100; // Random horizontal position
           
           const thickness = 5 + Math.random() * 15; // Thickness between 5px and 20px
           
           // Movement properties
           const xDirection = Math.random() > 0.5 ? 1 : -1;
-          const yDirection = 1; // Move downward
+          const yDirection = -1; // Move upward from top
           
           const duration = 10 + Math.random() * 20; // Animation duration between 10s and 30s
           const xDistance = 5 + Math.random() * 20; // Move 5-25% horizontally
@@ -36,7 +36,7 @@ const FloatingRingsBackground = ({ darkMode }) => {
             id: `top-${i}`,
             size,
             x: xPos,
-            y: 10 + Math.random() * 20, // Constrain to top 30% of screen
+            y: 0 + Math.random() * 20, // Start from the very top
             thickness,
             xDirection,
             yDirection,
@@ -50,14 +50,14 @@ const FloatingRingsBackground = ({ darkMode }) => {
         
         // Bottom rings
         for (let i = 0; i < bottomRingsCount; i++) {
-          const size = 80 + Math.random() * 150; // Size between 80px and 230px
+          const size = 80 + Math.random() * 50; // Size between 80px and 230px
           const xPos = Math.random() * 100; // Random horizontal position
           
           const thickness = 5 + Math.random() * 15; // Thickness between 5px and 20px
           
           // Movement properties
           const xDirection = Math.random() > 0.5 ? 1 : -1;
-          const yDirection = -1; // Move upward
+          const yDirection = 1; // Move downward from bottom
           
           const duration = 10 + Math.random() * 20; // Animation duration between 10s and 30s
           const xDistance = 5 + Math.random() * 20; // Move 5-25% horizontally
@@ -69,7 +69,7 @@ const FloatingRingsBackground = ({ darkMode }) => {
             id: `bottom-${i}`,
             size,
             x: xPos,
-            y: 80 + Math.random() * 20, // Constrain to bottom 30% of screen
+            y: 100 - Math.random() * 20, // Start from the very bottom
             thickness,
             xDirection,
             yDirection,
