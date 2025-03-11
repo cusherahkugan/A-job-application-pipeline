@@ -1,83 +1,142 @@
-Job Application Processing Pipeline
-A complete solution for collecting, processing, and analyzing job applications with automated CV parsing, cloud storage, and follow-up communication.
-Features
+# Metana Job Application Processor
 
-Modern responsive job application form with client-side validation
-CV document upload (PDF/DOCX) with real-time validation
-Secure cloud storage for CV files (Firebase Storage)
-Intelligent CV parsing to extract education, qualifications, and projects
-Automatic data storage in Google Sheets
-Webhook notifications for application processing
-Timezone-aware follow-up emails scheduled for the next day
-Comprehensive error handling
+A full-stack application for processing job applications, including CV handling, data extraction, cloud storage, and automated follow-up emails.
 
-Tech Stack
+## Features
 
-Frontend: React.js with Tailwind CSS
-Backend: Node.js + Express
-File Storage: Firebase Storage
-Database: Google Sheets API
-Email Service: SendGrid
-Document Parsing: pdf-parse (PDF) and mammoth (DOCX)
-Deployment: Heroku/Vercel/Netlify
+- Simple, user-friendly job application form
+- CV upload and storage in Firebase Storage
+- Automatic extraction of key information from CVs
+- Storage of structured data in Google Sheets
+- Webhook notifications for each processed application
+- Scheduled follow-up emails based on application timing
 
-Architecture
-The application follows a clean architecture with the following components:
+## Tech Stack
 
-Client Layer: React.js application with modern UI components
-API Layer: Express.js backend with RESTful endpoints
-Service Layer: Business logic for application processing
-Integration Layer: Firebase, Google Sheets, SendGrid integrations
+- **Frontend:** React.js
+- **Backend:** Node.js, Express.js
+- **Storage:** Firebase Storage, Google Sheets
+- **Email Service:** SendGrid
+- **Parsing:** PDF.js, Mammoth.js
+- **Scheduling:** Node-cron
 
-Getting Started
-Prerequisites
+## Project Structure
 
-Node.js (v14+)
-Firebase account
-Google Cloud account with Sheets API enabled
-SendGrid account
+```
+metana-job-app/
+├── client/                  # React frontend
+│   ├── src/
+│   │   ├── App.js
+│   │   └── components/
+│   │       └── ApplicationForm.js
+│
+├── server/                  # Node.js backend
+│   ├── config/              # Configuration files
+│   ├── controllers/         # Request handlers
+│   ├── middleware/          # Middleware functions
+│   ├── models/              # Data models
+│   ├── routes/              # API routes
+│   ├── services/            # Business logic
+│   ├── utils/               # Utility functions
+│   ├── .env                 # Environment variables
+│   ├── package.json
+│   └── server.js            # Express server
+│
+├── .gitignore
+├── package.json             # Root package.json
+└── README.md                # Documentation
+```
 
-Installation
+## Setup and Installation
 
-Clone the repository
+### Prerequisites
 
-bashCopygit clone https://github.com/your-username/job-application-processor.git
-cd job-application-processor
+- Node.js 14+
+- npm or yarn
+- Google Cloud Platform account
+- Firebase account
+- SendGrid account
 
-Install server dependencies
+### Installation
 
-bashCopynpm install
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/metana-job-app.git
+   cd metana-job-app
+   ```
 
-Install client dependencies
+2. Install dependencies:
+   ```
+   npm run install-all
+   ```
 
-bashCopycd client
-npm install
-cd ..
+3. Create environment variables:
+   
+   Create a `.env` file in the server directory with the following variables:
+   ```
+   PORT=5000
+   NODE_ENV=development
+   
+   # Google Sheets Config
+   GOOGLE_SHEETS_ID=your_sheet_id
+   
+   # SendGrid Config
+   SENDGRID_API_KEY=your_sendgrid_api_key
+   EMAIL_FROM=your_email@example.com
+   
+   # Webhook Config
+   WEBHOOK_URL=https://rnd-assignment.automations-3d6.workers.dev/
+   CANDIDATE_EMAIL=your_candidate_email@example.com
+   
+   # Firebase Config
+   FIREBASE_API_KEY=your_firebase_api_key
+   FIREBASE_AUTH_DOMAIN=your_firebase_domain
+   FIREBASE_PROJECT_ID=your_firebase_project_id
+   FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+   FIREBASE_MESSAGING_SENDER_ID=your_firebase_sender_id
+   FIREBASE_APP_ID=your_firebase_app_id
+   
+   # Google Service Account
+   GOOGLE_SERVICE_ACCOUNT_CREDENTIALS={"type":"service_account",...}
+   ```
 
-Set up environment variables
-Create a .env file in the root directory based on the provided .env.example.
-Set up Firebase
+4. Run the application in development mode:
+   ```
+   npm run dev
+   ```
 
+## API Endpoints
 
-Create a Firebase project
-Enable Storage
-Download the service account key and save it as serviceAccountKey.json in the root folder
+- **POST /api/applications/submit** - Submit a new job application
+- **GET /api/applications/status/:email** - Get application status by email
 
+## Webhooks
 
-Set up Google Sheets
+After processing each CV, the system sends a webhook to the specified endpoint with the following payload:
 
+```json
+{
+  "cv_data": {
+    "personal_info": {...},
+    "education": [...],
+    "qualifications": [...],
+    "projects": [...],
+    "cv_public_link": "..."
+  },
+  "metadata": {
+    "applicant_name": "John Doe",
+    "email": "john.doe@example.com",
+    "status": "prod",
+    "cv_processed": true,
+    "processed_timestamp": "2023-03-01T12:00:00Z"
+  }
+}
+```
 
-Create a Google Sheet for storing application data
-Download the service account key and save it as googleSheetsConfig.json in the root folder
+## Scheduled Emails
 
-Running the Application
+The system schedules follow-up emails to be sent the next day after application submission, optimized for the applicant's time zone.
 
-Start the development server
+## License
 
-bashCopynpm run dev
-
-In a separate terminal, start the React client
-
-bashCopynpm run client
-
-Open your browser and navigate to http://localhost:3000
+MIT License

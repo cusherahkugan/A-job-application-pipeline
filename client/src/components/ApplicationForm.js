@@ -259,73 +259,75 @@ const ApplicationForm = ({ darkMode, onSubmitSuccess }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ // Modification for the handleSubmit function in client/src/components/ApplicationForm.js
 
-    if (validateForm()) {
-      setLoading(true);
-      
-      try {
-        // Create form data for file upload
-        const data = new FormData();
-        data.append('name', formData.name);
-        data.append('email', formData.email);
-        data.append('phone', `${formData.phoneCountryCode}${formData.phoneNumber}`);
-        data.append('cv', formData.cv);
+// Replace the existing handleSubmit function with this one
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-        // Submit form to API
-        const response = await fetch('/api/applications/submit', {
-          method: 'POST',
-          body: data
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to submit application');
-        }
-        
-        const result = await response.json();
-        console.log('Submission successful:', result);
-        
-        // Show success message
-        toast.success('Application submitted successfully!');
-        
-        // Trigger success animation
-        if (onSubmitSuccess) {
-          onSubmitSuccess();
-        }
-        
-        // Reset form
-        setFormData({
-          name: '',
-          email: '',
-          phoneCountryCode: '+94',
-          phoneNumber: '',
-          cv: null
-        });
-        setFileName('');
-        setValidFields({});
-        
-      } catch (error) {
-        console.error('Error submitting application:', error);
-        
-        // Handle error
-        toast.error('Submission failed. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      // Show enhanced error dialog with personalized message
-      setErrorMessage(getPersonalizedErrorMessage());
-      setShowErrorAnimation(true);
-      
-      // Highlight invalid fields
-      Object.keys(errors).forEach(fieldName => {
-        setValidFields(prev => ({ ...prev, [fieldName]: false }));
+  if (validateForm()) {
+    setLoading(true);
+    
+    try {
+      // Create form data for file upload
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('email', formData.email);
+      data.append('phone', `${formData.phoneCountryCode}${formData.phoneNumber}`);
+      data.append('cv', formData.cv);
+
+      // Submit form to API
+      const response = await fetch('/api/applications/submit', {
+        method: 'POST',
+        body: data
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit application');
+      }
+      
+      const result = await response.json();
+      console.log('Submission successful:', result);
+      
+      // Show success message
+      toast.success('Application submitted successfully!');
+      
+      // Trigger success animation
+      if (onSubmitSuccess) {
+        onSubmitSuccess(result.data);
+      }
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phoneCountryCode: '+94',
+        phoneNumber: '',
+        cv: null
+      });
+      setFileName('');
+      setValidFields({});
+      
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      
+      // Handle error
+      toast.error(error.message || 'Submission failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  };
-
+  } else {
+    // Show enhanced error dialog with personalized message
+    setErrorMessage(getPersonalizedErrorMessage());
+    setShowErrorAnimation(true);
+    
+    // Highlight invalid fields
+    Object.keys(errors).forEach(fieldName => {
+      setValidFields(prev => ({ ...prev, [fieldName]: false }));
+    });
+  }
+};
   // Get input field class based on validation status
   const getInputClass = (fieldName) => {
     const baseClass = "w-full px-3 py-2 border rounded-md transition-all duration-300 ";
