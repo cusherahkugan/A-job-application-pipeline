@@ -1,37 +1,74 @@
-// app.js
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const apiRoutes = require('./server/routes/api');
-require('dotenv').config();
+const dotenv = require('dotenv');
+const { initializeFirebaseAdmin } = require('./server/config/firebase');
 
-// Create Express app
+// Load environment variables ONCE
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+// Initialize Firebase Admin
+try {
+  initializeFirebaseAdmin();
+  console.log('Firebase Admin initialized successfully');
+} catch (err) {
+  console.error('Failed to initialize Firebase:', err);
+}
+
 const app = express();
 
-// Set up middleware
-app.use(cors());
+// Define allowed origins
+const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
+// CORS configuration
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Pre-flight requests handler
+app.options('*', cors());
+
+// Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
+// Import routes
+const applicationRoutes = require('./server/routes/applicationRoutes');
+
+// API routes
+app.use('/api/applications', applicationRoutes);
 
 // Serve static files from the client build folder
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// API routes
-app.use('/api', apiRoutes);
-
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('Server Error:', err);
   
-  if (err.message === 'Only PDF and DOCX files are allowed') {
-    return res.status(400).json({ message: 'Only PDF and DOCX files are allowed' });
-  }
-  
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ message: 'File size limit exceeded (max 5MB)' });
-  }
-  
-  res.status(500).json({ message: 'Internal server error', error: err.message });
+  // Return structured error response
+  res.status(err.status || 500).json({ 
+    success: false, 
+    message: err.message || 'Internal server error', 
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+  });
 });
 
 // Serve React app for all other routes
@@ -43,4 +80,5 @@ app.get('*', (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`CORS enabled for origins: ${allowedOrigins.join(', ')}`);
 });

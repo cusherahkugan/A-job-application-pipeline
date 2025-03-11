@@ -1,3 +1,4 @@
+// controllers/applicationController.js
 const Application = require('../models/applicationModel');
 const firebaseService = require('../services/firebaseService');
 const cvParser = require('../services/cvParser');
@@ -8,41 +9,72 @@ const emailService = require('../services/emailService');
 /**
  * Submit a new job application
  * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Object} Response with status and data
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @returns {Object} Response
  */
 const submitApplication = async (req, res) => {
+  console.log('Processing application submission');
+  
+  // Log request details (for debugging)
+  console.log('Request body:', req.body);
+  console.log('File info:', req.file ? {
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  } : 'No file');
+  
   try {
+    // Check if the file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'CV file is required'
+      });
+    }
+    
     // Extract data from request
     const { name, email, phone } = req.body;
-    const cvFile = req.file;
     
-    // Validate application data
+    // Validate required fields
+    if (!name || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: name, email, and phone are required'
+      });
+    }
+    
+    // Create application instance for validation
     const application = new Application({
       name,
       email,
       phone
     });
     
+    console.log('Validated application data:', application.toObject());
+    
     // Upload CV to Firebase Storage
+    console.log('Uploading CV to Firebase Storage...');
     const cvUrl = await firebaseService.uploadFile(
-      cvFile.buffer,
-      cvFile.originalname,
-      cvFile.mimetype
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
     );
     
-    // Update application with CV URL
-    application.cvUrl = cvUrl;
+    console.log('CV uploaded successfully. URL:', cvUrl);
     
-    // Parse the CV content
+    // Parse CV content
+    console.log('Parsing CV content...');
     const userInfo = {
       name,
       email,
       phone
     };
     
-    const cvData = await cvParser.parseCV(cvFile.buffer, cvFile.mimetype, userInfo);
+    const cvData = await cvParser.parseCV(req.file.buffer, req.file.mimetype, userInfo);
+    
+    // Update application with CV URL and data
+    application.cvUrl = cvUrl;
     application.cvData = cvData;
     
     // Prepare data for Google Sheets
@@ -58,19 +90,24 @@ const submitApplication = async (req, res) => {
     };
     
     // Save to Google Sheets
+    console.log('Saving to Google Sheets...');
     await googleSheetsService.saveToGoogleSheets(sheetData);
     
     // Send webhook notification
-    await webhookService.sendWebhook({
+    console.log('Sending webhook notification...');
+    const webhookResult = await webhookService.sendWebhook({
       personalInfo: cvData.personalInfo,
       education: cvData.education,
       qualifications: cvData.qualifications,
       projects: cvData.projects,
       cvUrl,
       timestamp: application.timestamp.toISOString()
-    });
+    }, "testing");
+    
+    console.log('Webhook notification result:', webhookResult.success ? 'Success' : 'Failed');
     
     // Schedule follow-up email
+    console.log('Scheduling follow-up email...');
     await emailService.scheduleFollowUpEmail(email, name);
     
     // Return success response
@@ -97,24 +134,30 @@ const submitApplication = async (req, res) => {
 /**
  * Get application status by email
  * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Object} Response with status and data
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @returns {Object} Response
  */
 const getApplicationStatus = async (req, res) => {
   try {
     const { email } = req.params;
     
-    // Here you would normally query a database
-    // Since we're using Google Sheets, this is a placeholder
-    // In a real implementation, you would query the Google Sheet
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email parameter is required'
+      });
+    }
+    
+    // Simple placeholder implementation
+    // In a real app, you would query a database or Google Sheets
     
     return res.status(200).json({
       success: true,
       message: 'Application status retrieved',
       data: {
         email,
-        status: 'Under Review', // Placeholder
+        status: 'Under Review',
         submitDate: new Date().toISOString()
       }
     });

@@ -1,302 +1,353 @@
-const mammoth = require('mammoth');
-const pdfParse = require('pdf-parse');
+// services/cvParser.js
 const { v4: uuidv4 } = require('uuid');
+let pdfParse, mammoth;
+
+// Dynamically import required libraries
+try {
+  pdfParse = require('pdf-parse');
+} catch (err) {
+  console.warn('pdf-parse module not available. PDF parsing will be limited.');
+  pdfParse = null;
+}
+
+try {
+  mammoth = require('mammoth');
+} catch (err) {
+  console.warn('mammoth module not available. DOCX parsing will be limited.');
+  mammoth = null;
+}
 
 /**
- * Extract text content from a PDF file
+ * Extract text from PDF file
  * 
  * @param {Buffer} fileBuffer - PDF file buffer
- * @returns {Promise<String>} Extracted text content
+ * @returns {Promise<String>} Extracted text
  */
 const extractTextFromPDF = async (fileBuffer) => {
   try {
-    // Use pdf-parse to extract text
+    if (!pdfParse) {
+      return `[PDF content not extracted - pdf-parse module not available]`;
+    }
+    
     const result = await pdfParse(fileBuffer);
     return result.text;
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
-    throw new Error('Failed to extract text from PDF');
+    return `[Error extracting PDF content: ${error.message}]`;
   }
 };
 
 /**
- * Extract text content from a DOCX file
+ * Extract text from DOCX file
  * 
  * @param {Buffer} fileBuffer - DOCX file buffer
- * @returns {Promise<String>} Extracted text content
+ * @returns {Promise<String>} Extracted text
  */
 const extractTextFromDOCX = async (fileBuffer) => {
   try {
+    if (!mammoth) {
+      return `[DOCX content not extracted - mammoth module not available]`;
+    }
+    
     const result = await mammoth.extractRawText({ buffer: fileBuffer });
     return result.value;
   } catch (error) {
     console.error('Error extracting text from DOCX:', error);
-    throw new Error('Failed to extract text from DOCX');
+    return `[Error extracting DOCX content: ${error.message}]`;
   }
 };
 
 /**
  * Extract personal information from CV text
  * 
- * @param {String} text - CV text content
- * @param {Object} userInfo - Basic user information from form
+ * @param {String} text - CV text
+ * @param {Object} userInfo - User information from form
  * @returns {Object} Personal information
  */
 const extractPersonalInfo = (text, userInfo) => {
-  // Use the form-provided information as a base
+  // Basic information from form input
   const personalInfo = {
     id: uuidv4(),
     name: userInfo.name,
     email: userInfo.email,
     phone: userInfo.phone
   };
-
-  // Try to extract additional personal information from CV
-  // This is a basic implementation - more sophisticated NLP could be used
   
-  // Extract LinkedIn profile
-  const linkedinRegex = /linkedin\.com\/in\/([a-zA-Z0-9-]+)/i;
-  const linkedinMatch = text.match(linkedinRegex);
-  if (linkedinMatch) {
-    personalInfo.linkedin = `linkedin.com/in/${linkedinMatch[1]}`;
+  try {
+    // Extract additional info if possible
+    const linkedinRegex = /linkedin\.com\/in\/([a-zA-Z0-9-]+)/i;
+    const linkedinMatch = text.match(linkedinRegex);
+    if (linkedinMatch) {
+      personalInfo.linkedin = `linkedin.com/in/${linkedinMatch[1]}`;
+    }
+    
+    const githubRegex = /github\.com\/([a-zA-Z0-9-]+)/i;
+    const githubMatch = text.match(githubRegex);
+    if (githubMatch) {
+      personalInfo.github = `github.com/${githubMatch[1]}`;
+    }
+    
+    return personalInfo;
+  } catch (error) {
+    console.error('Error extracting personal info:', error);
+    return personalInfo;
   }
-  
-  // Extract GitHub profile
-  const githubRegex = /github\.com\/([a-zA-Z0-9-]+)/i;
-  const githubMatch = text.match(githubRegex);
-  if (githubMatch) {
-    personalInfo.github = `github.com/${githubMatch[1]}`;
-  }
-
-  return personalInfo;
 };
 
 /**
  * Extract education information from CV text
  * 
- * @param {String} lowerText - Lowercase CV text
- * @param {String} originalText - Original CV text
+ * @param {String} text - CV text
  * @returns {Array} Education information
  */
-const extractEducation = (lowerText, originalText) => {
-  const education = [];
-  
-  // Common education keywords
-  const educationKeywords = ['education', 'university', 'college', 'degree', 'bachelor', 'master', 'phd', 'diploma'];
-  
-  // Check if education section exists
-  const educationSectionIndex = educationKeywords.findIndex(keyword => 
-    lowerText.includes(keyword)
-  );
-  
-  if (educationSectionIndex !== -1) {
-    // Find the start of the education section
-    const educationKeyword = educationKeywords[educationSectionIndex];
-    const sectionStartIndex = lowerText.indexOf(educationKeyword);
+const extractEducation = (text) => {
+  try {
+    const lowerText = text.toLowerCase();
     
-    // Get a chunk of text after the education keyword
-    const educationChunk = originalText.substring(sectionStartIndex, sectionStartIndex + 1000);
+    // Common education keywords
+    const educationKeywords = ['education', 'university', 'college', 'degree', 'bachelor', 'master', 'phd'];
     
-    // Simple extraction of education entries (could be improved with NLP)
-    const lines = educationChunk.split('\n').filter(line => line.trim().length > 0);
+    // Look for education section
+    const educationSectionIndex = educationKeywords.findIndex(keyword => 
+      lowerText.includes(keyword)
+    );
     
-    let currentEntry = {};
-    for (const line of lines) {
-      // Look for degree indicators
-      if (line.match(/bachelor|master|phd|diploma|degree|bsc|msc|bs|ba|ma|mba/i)) {
-        if (Object.keys(currentEntry).length > 0) {
-          education.push(currentEntry);
-          currentEntry = {};
-        }
-        
-        currentEntry.degree = line.trim();
-      } 
-      // Look for university/institution
-      else if (line.match(/university|college|institute|school/i) && !currentEntry.institution) {
-        currentEntry.institution = line.trim();
-      }
-      // Look for dates
-      else if (line.match(/20[0-9]{2}|19[0-9]{2}/)) {
-        currentEntry.date = line.trim();
-        
-        // If we have a complete entry, add it
-        if (Object.keys(currentEntry).length >= 2) {
-          education.push(currentEntry);
-          currentEntry = {};
-        }
+    if (educationSectionIndex === -1) {
+      // No education section found
+      return [{
+        id: uuidv4(),
+        detected: false,
+        note: "Education section not found in the CV."
+      }];
+    }
+    
+    // Extract education information
+    // This is a very basic implementation - would need NLP for better results
+    const education = [];
+    
+    // Split text into paragraphs
+    const paragraphs = text.split('\n').filter(p => p.trim().length > 0);
+    
+    // Look for paragraphs that might contain education info
+    for (const paragraph of paragraphs) {
+      if (educationKeywords.some(keyword => paragraph.toLowerCase().includes(keyword))) {
+        education.push({
+          id: uuidv4(),
+          detected: true,
+          text: paragraph.trim()
+        });
       }
     }
     
-    // Add the last entry if it exists
-    if (Object.keys(currentEntry).length > 0) {
-      education.push(currentEntry);
+    // If no specific entries found, provide a generic one
+    if (education.length === 0) {
+      education.push({
+        id: uuidv4(),
+        detected: true,
+        text: "Education section found but specific details could not be extracted."
+      });
     }
-  }
-  
-  // If no structured education found, return a placeholder
-  if (education.length === 0) {
-    education.push({
+    
+    return education;
+  } catch (error) {
+    console.error('Error extracting education:', error);
+    return [{
       id: uuidv4(),
       detected: false,
-      note: "Education details couldn't be automatically extracted. Please review the CV manually."
-    });
-  } else {
-    // Add IDs to each entry
-    education.forEach(entry => {
-      entry.id = uuidv4();
-      entry.detected = true;
-    });
+      error: true,
+      note: `Failed to extract education details: ${error.message}`
+    }];
   }
-  
-  return education;
 };
 
 /**
  * Extract qualifications from CV text
  * 
- * @param {String} lowerText - Lowercase CV text
- * @param {String} originalText - Original CV text
- * @returns {Array} Qualifications information
+ * @param {String} text - CV text
+ * @returns {Array} Qualifications
  */
-const extractQualifications = (lowerText, originalText) => {
-  const qualifications = [];
-  
-  // Common qualification keywords
-  const qualificationKeywords = ['skills', 'technologies', 'certifications', 'qualifications', 'expertise'];
-  
-  // Find qualification sections
-  qualificationKeywords.forEach(keyword => {
-    if (lowerText.includes(keyword)) {
-      const keywordIndex = lowerText.indexOf(keyword);
-      
-      // Extract a chunk of text after the keyword
-      const chunk = originalText.substring(keywordIndex, keywordIndex + 500);
-      
-      // Split into lines and filter empty ones
-      const lines = chunk.split('\n').filter(line => line.trim().length > 0);
-      
-      // Extract skills or certifications (basic implementation)
-      lines.slice(1, 10).forEach(line => {
-        // Skip lines that are likely headers or too short
-        if (line.length > 3 && !qualificationKeywords.some(kw => line.toLowerCase().includes(kw))) {
-          qualifications.push({
-            id: uuidv4(),
-            type: keyword,
-            description: line.trim()
-          });
-        }
+const extractQualifications = (text) => {
+  try {
+    const lowerText = text.toLowerCase();
+    
+    // Common qualification keywords
+    const qualificationKeywords = ['skills', 'technologies', 'certifications', 'qualifications', 'expertise'];
+    
+    // Extract qualifications
+    const qualifications = [];
+    
+    // Look for each keyword
+    qualificationKeywords.forEach(keyword => {
+      if (lowerText.includes(keyword)) {
+        const index = lowerText.indexOf(keyword);
+        
+        // Extract a chunk of text after the keyword
+        const chunk = text.substring(index, index + 500);
+        
+        // Split into lines
+        const lines = chunk.split('\n').filter(line => line.trim().length > 0);
+        
+        // Add first few lines as qualifications
+        lines.slice(1, 10).forEach(line => {
+          if (line.length > 3) {
+            qualifications.push({
+              id: uuidv4(),
+              detected: true,
+              type: keyword,
+              text: line.trim()
+            });
+          }
+        });
+      }
+    });
+    
+    // If no qualifications found
+    if (qualifications.length === 0) {
+      qualifications.push({
+        id: uuidv4(),
+        detected: false,
+        note: "Qualifications section not found in the CV."
       });
     }
-  });
-  
-  // If no qualifications found, add a placeholder
-  if (qualifications.length === 0) {
-    qualifications.push({
+    
+    return qualifications;
+  } catch (error) {
+    console.error('Error extracting qualifications:', error);
+    return [{
       id: uuidv4(),
       detected: false,
-      note: "Qualifications couldn't be automatically extracted. Please review the CV manually."
-    });
-  } else {
-    // Mark as detected
-    qualifications.forEach(qual => {
-      qual.detected = true;
-    });
+      error: true,
+      note: `Failed to extract qualification details: ${error.message}`
+    }];
   }
-  
-  return qualifications;
 };
 
 /**
  * Extract projects from CV text
  * 
- * @param {String} lowerText - Lowercase CV text
- * @param {String} originalText - Original CV text
- * @returns {Array} Projects information
+ * @param {String} text - CV text
+ * @returns {Array} Projects
  */
-const extractProjects = (lowerText, originalText) => {
-  const projects = [];
-  
-  // Common project section keywords
-  const projectKeywords = ['projects', 'portfolio', 'work samples'];
-  
-  // Find project sections
-  const projectKeywordIndex = projectKeywords.findIndex(keyword => 
-    lowerText.includes(keyword)
-  );
-  
-  if (projectKeywordIndex !== -1) {
-    const keyword = projectKeywords[projectKeywordIndex];
-    const sectionIndex = lowerText.indexOf(keyword);
+const extractProjects = (text) => {
+  try {
+    const lowerText = text.toLowerCase();
     
-    // Get a chunk of text after the keyword
-    const projectSection = originalText.substring(sectionIndex, sectionIndex + 1500);
+    // Project keywords
+    const projectKeywords = ['projects', 'portfolio', 'work samples', 'experience'];
+    
+    // Find project section
+    const projectKeywordIndex = projectKeywords.findIndex(keyword => 
+      lowerText.includes(keyword)
+    );
+    
+    if (projectKeywordIndex === -1) {
+      // No projects section found
+      return [{
+        id: uuidv4(),
+        detected: false,
+        note: "Projects section not found in the CV."
+      }];
+    }
+    
+    // Extract project information
+    const projects = [];
+    const keyword = projectKeywords[projectKeywordIndex];
+    const index = lowerText.indexOf(keyword);
+    
+    // Get text after the keyword
+    const section = text.substring(index, index + 1000);
     
     // Split into paragraphs
-    const paragraphs = projectSection.split('\n\n').filter(p => p.trim().length > 0);
+    const paragraphs = section.split('\n\n').filter(p => p.trim().length > 0);
     
-    // Process each paragraph as a potential project
-    paragraphs.slice(1, 6).forEach(paragraph => {
-      // Skip if too short
+    // Process paragraphs as projects
+    paragraphs.slice(1, 5).forEach(paragraph => {
       if (paragraph.length > 20) {
         projects.push({
           id: uuidv4(),
-          description: paragraph.trim()
+          detected: true,
+          text: paragraph.trim()
         });
       }
     });
-  }
-  
-  // If no projects found, add a placeholder
-  if (projects.length === 0) {
-    projects.push({
+    
+    // If no specific projects found
+    if (projects.length === 0) {
+      projects.push({
+        id: uuidv4(),
+        detected: true,
+        text: "Projects section found but specific details could not be extracted."
+      });
+    }
+    
+    return projects;
+  } catch (error) {
+    console.error('Error extracting projects:', error);
+    return [{
       id: uuidv4(),
       detected: false,
-      note: "Projects couldn't be automatically extracted. Please review the CV manually."
-    });
-  } else {
-    // Mark as detected
-    projects.forEach(project => {
-      project.detected = true;
-    });
+      error: true,
+      note: `Failed to extract project details: ${error.message}`
+    }];
   }
-  
-  return projects;
 };
 
 /**
- * Parse CV content and extract structured information
+ * Parse CV file and extract structured information
  * 
  * @param {Buffer} fileBuffer - CV file buffer
  * @param {String} mimeType - File MIME type
  * @param {Object} userInfo - Basic user information from form
- * @returns {Promise<Object>} Structured CV data
+ * @returns {Promise<Object>} Parsed CV data
  */
 const parseCV = async (fileBuffer, mimeType, userInfo) => {
   try {
-    // Extract text based on file type
+    console.log(`Parsing CV file (${mimeType}, ${fileBuffer.length} bytes)`);
+    
+    // Extract text from file
     let textContent = '';
     if (mimeType === 'application/pdf') {
       textContent = await extractTextFromPDF(fileBuffer);
     } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       textContent = await extractTextFromDOCX(fileBuffer);
     } else {
-      throw new Error('Unsupported file type');
+      throw new Error(`Unsupported file type: ${mimeType}`);
     }
     
-    // Convert text to lowercase for case-insensitive matching
-    const lowerTextContent = textContent.toLowerCase();
+    // If text extraction failed
+    if (!textContent || textContent.length < 10) {
+      console.warn('Failed to extract meaningful text from CV file');
+      return {
+        personalInfo: {
+          id: uuidv4(),
+          name: userInfo.name,
+          email: userInfo.email,
+          phone: userInfo.phone,
+          note: "Failed to extract text from CV file."
+        },
+        education: [{
+          id: uuidv4(),
+          detected: false,
+          note: "Failed to extract text from CV file."
+        }],
+        qualifications: [{
+          id: uuidv4(),
+          detected: false,
+          note: "Failed to extract text from CV file."
+        }],
+        projects: [{
+          id: uuidv4(),
+          detected: false,
+          note: "Failed to extract text from CV file."
+        }]
+      };
+    }
     
-    // Extract personal information
+    // Extract structured data
     const personalInfo = extractPersonalInfo(textContent, userInfo);
-    
-    // Extract education details
-    const education = extractEducation(lowerTextContent, textContent);
-    
-    // Extract qualifications
-    const qualifications = extractQualifications(lowerTextContent, textContent);
-    
-    // Extract projects
-    const projects = extractProjects(lowerTextContent, textContent);
+    const education = extractEducation(textContent);
+    const qualifications = extractQualifications(textContent);
+    const projects = extractProjects(textContent);
     
     return {
       personalInfo,
@@ -307,14 +358,15 @@ const parseCV = async (fileBuffer, mimeType, userInfo) => {
   } catch (error) {
     console.error('Error parsing CV:', error);
     
-    // Return basic structure even if parsing fails
+    // Return basic structure with error information
     return {
       personalInfo: {
         id: uuidv4(),
         name: userInfo.name,
         email: userInfo.email,
         phone: userInfo.phone,
-        parsingError: true
+        parsingError: true,
+        errorMessage: error.message
       },
       education: [{
         id: uuidv4(),

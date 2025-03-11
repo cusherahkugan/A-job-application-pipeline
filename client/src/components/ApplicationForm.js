@@ -1,6 +1,9 @@
+// /client/src/components/ApplicationForm
 import React, { useState, useEffect } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Common country codes with flags
 const countryCodes = [
@@ -259,12 +262,10 @@ const ApplicationForm = ({ darkMode, onSubmitSuccess }) => {
     return Object.keys(newErrors).length === 0;
   };
 
- // Modification for the handleSubmit function in client/src/components/ApplicationForm.js
-
-// Replace the existing handleSubmit function with this one
+ // Fixed ApplicationForm.js handleSubmit function
 const handleSubmit = async (e) => {
   e.preventDefault();
-
+  
   if (validateForm()) {
     setLoading(true);
     
@@ -274,20 +275,26 @@ const handleSubmit = async (e) => {
       data.append('name', formData.name);
       data.append('email', formData.email);
       data.append('phone', `${formData.phoneCountryCode}${formData.phoneNumber}`);
-      data.append('cv', formData.cv);
-
-      // Submit form to API
-      const response = await fetch('/api/applications/submit', {
-        method: 'POST',
-        body: data
-      });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit application');
+      // Make sure we have a file to upload
+      if (formData.cv instanceof File) {
+        data.append('cv', formData.cv);
+      } else {
+        throw new Error('CV file is required');
       }
       
-      const result = await response.json();
+      // Log what we're sending (for debugging)
+      console.log('Submitting form with data:', {
+        name: formData.name,
+        email: formData.email,
+        phone: `${formData.phoneCountryCode}${formData.phoneNumber}`,
+        cv: formData.cv ? `${formData.cv.name} (${formData.cv.size} bytes)` : 'No file'
+      });
+      
+      // Import and use the API service rather than direct fetch
+      const { submitApplication } = await import('../api/index');
+      const result = await submitApplication(data);
+      
       console.log('Submission successful:', result);
       
       // Show success message
@@ -308,7 +315,6 @@ const handleSubmit = async (e) => {
       });
       setFileName('');
       setValidFields({});
-      
     } catch (error) {
       console.error('Error submitting application:', error);
       
@@ -328,6 +334,7 @@ const handleSubmit = async (e) => {
     });
   }
 };
+
   // Get input field class based on validation status
   const getInputClass = (fieldName) => {
     const baseClass = "w-full px-3 py-2 border rounded-md transition-all duration-300 ";

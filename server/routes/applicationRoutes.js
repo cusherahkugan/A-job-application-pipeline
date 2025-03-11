@@ -1,21 +1,13 @@
+// routes/applicationRoutes.js
 const express = require('express');
-const applicationController = require('../controllers/applicationController');
-const { handleUploadErrors } = require('../middleware/fileUpload');
-
 const router = express.Router();
+const { handleUploadErrors } = require('../middleware/fileUpload');
+const applicationController = require('../controllers/applicationController');
 
-/**
- * @route   POST /api/applications/submit
- * @desc    Submit a new job application
- * @access  Public
- */
+// Application submission endpoint
 router.post('/submit', handleUploadErrors, applicationController.submitApplication);
 
-/**
- * @route   GET /api/applications/status/:email
- * @desc    Get application status by email
- * @access  Public
- */
+// Application status endpoint
 router.get('/status/:email', applicationController.getApplicationStatus);
 
 module.exports = router;

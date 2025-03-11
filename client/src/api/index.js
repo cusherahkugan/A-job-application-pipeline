@@ -1,9 +1,5 @@
-/**
- * API client for communicating with the backend
- */
-
 // Base API URL
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 /**
  * Submit a job application
@@ -13,10 +9,14 @@ const API_URL = process.env.REACT_APP_API_URL || '/api';
  */
 export const submitApplication = async (formData) => {
   try {
+    console.log('Submitting to:', `${API_URL}/applications/submit`);
+    
     const response = await fetch(`${API_URL}/applications/submit`, {
       method: 'POST',
       body: formData, // FormData for file upload
       // No Content-Type header - browser sets it with boundary for FormData
+      mode: 'cors', // Explicitly set CORS mode
+      credentials: 'same-origin', // Changed from 'include' to 'same-origin'
     });
     
     if (!response.ok) {
