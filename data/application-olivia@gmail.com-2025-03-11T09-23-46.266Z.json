@@ -1,0 +1,36 @@
+{
+  "name": "olivia",
+  "email": "olivia@gmail.com",
+  "phone": "+940766741405",
+  "cvUrl": "http://localhost:5000/uploads/1741685026262-75f04786-04d0-4fbb-9995-5a04a221dd78.pdf",
+  "timestamp": "2025-03-11T09:23:46.266Z",
+  "personalInfo": {
+    "name": "olivia",
+    "email": "olivia@gmail.com",
+    "phone": "+940766741405"
+  },
+  "education": [
+    {
+      "institution": "Example University",
+      "degree": "Bachelor's Degree",
+      "year": "2018-2022"
+    }
+  ],
+  "qualifications": [
+    {
+      "skill": "JavaScript"
+    },
+    {
+      "skill": "React"
+    },
+    {
+      "skill": "Node.js"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Portfolio Website",
+      "description": "Personal website showcasing my work"
+    }
+  ]
+}

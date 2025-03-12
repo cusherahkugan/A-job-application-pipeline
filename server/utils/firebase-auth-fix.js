@@ -34,46 +34,36 @@ const formatFirebasePrivateKey = (key) => {
    * 
    * @returns {Object} Firebase service account credentials
    */
-  const getFirebaseServiceAccount = () => {
-    // Try to get credentials from full JSON string first
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS) {
-      try {
-        console.log('Attempting to use GOOGLE_SERVICE_ACCOUNT_CREDENTIALS');
+// utils/firebase-auth-fix.js
+const getFirebaseServiceAccount = () => {
+    try {
+      // Get service account from environment variables
+      if (process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS) {
+        // If JSON string is provided in env var
         return JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS);
-      } catch (err) {
-        console.error('Error parsing GOOGLE_SERVICE_ACCOUNT_CREDENTIALS:', err);
+      } else {
+        // If individual credentials are provided
+        return {
+          type: "service_account",
+          project_id: process.env.FIREBASE_PROJECT_ID,
+          private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+          private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          client_email: process.env.FIREBASE_CLIENT_EMAIL,
+          client_id: process.env.FIREBASE_CLIENT_ID,
+          auth_uri: "https://accounts.google.com/o/oauth2/auth",
+          token_uri: "https://oauth2.googleapis.com/token",
+          auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+          client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.FIREBASE_CLIENT_EMAIL)}`,
+          universe_domain: "googleapis.com"
+        };
       }
-    }
-    
-    // Fall back to individual credential fields
-    console.log('Using individual Firebase credential fields');
-    
-    // Verify required fields are present
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = formatFirebasePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
-    
-    if (!projectId || !clientEmail || !privateKey) {
-      console.error('Missing required Firebase credentials:',
-        !projectId ? 'FIREBASE_PROJECT_ID' : '',
-        !clientEmail ? 'FIREBASE_CLIENT_EMAIL' : '',
-        !privateKey ? 'FIREBASE_PRIVATE_KEY' : ''
-      );
+    } catch (error) {
+      console.error('Error getting Firebase service account credentials:', error);
       return null;
     }
-    
-    // Log key format (for debugging)
-    console.log('Private key begins with:', privateKey.substring(0, 27));
-    console.log('Private key ends with:', privateKey.substring(privateKey.length - 25));
-    
-    // Return properly formatted service account
-    return {
-      type: "service_account",
-      project_id: projectId,
-      private_key: privateKey,
-      client_email: clientEmail
-    };
   };
+  
+  module.exports = { getFirebaseServiceAccount };
   
   module.exports = {
     formatFirebasePrivateKey,

@@ -1,10 +1,9 @@
 // controllers/applicationController.js
 const Application = require('../models/applicationModel');
-const firebaseService = require('../services/firebaseService');
+const storageService = require('../services/storageService');
 const cvParser = require('../services/cvParser');
-const googleSheetsService = require('../services/googleSheetsService');
-const webhookService = require('../services/webhookService');
-const emailService = require('../services/emailService');
+const path = require('path');
+const fs = require('fs');
 
 /**
  * Submit a new job application
@@ -53,9 +52,9 @@ const submitApplication = async (req, res) => {
     
     console.log('Validated application data:', application.toObject());
     
-    // Upload CV to Firebase Storage
-    console.log('Uploading CV to Firebase Storage...');
-    const cvUrl = await firebaseService.uploadFile(
+    // Upload CV using our unified storage service (with Firebase + local fallback)
+    console.log('Uploading CV...');
+    const cvUrl = await storageService.uploadFile(
       req.file.buffer,
       req.file.originalname,
       req.file.mimetype
@@ -63,52 +62,93 @@ const submitApplication = async (req, res) => {
     
     console.log('CV uploaded successfully. URL:', cvUrl);
     
-    // Parse CV content
-    console.log('Parsing CV content...');
+    // Basic user info
     const userInfo = {
       name,
       email,
       phone
     };
     
-    const cvData = await cvParser.parseCV(req.file.buffer, req.file.mimetype, userInfo);
+    // Parse CV content (if available)
+    let cvData = {
+      personalInfo: { 
+        name,
+        email,
+        phone
+      },
+      education: [{ institution: "Not extracted", degree: "Not extracted" }],
+      qualifications: [{ skill: "Not extracted" }],
+      projects: [{ name: "Not extracted", description: "Not extracted" }]
+    };
+    
+    try {
+      if (typeof cvParser.parseCV === 'function') {
+        cvData = await cvParser.parseCV(req.file.buffer, req.file.mimetype, userInfo);
+        console.log('CV parsed successfully');
+      }
+    } catch (parseError) {
+      console.error('Error parsing CV:', parseError);
+      // Continue with default data
+    }
     
     // Update application with CV URL and data
     application.cvUrl = cvUrl;
     application.cvData = cvData;
     
-    // Prepare data for Google Sheets
-    const sheetData = {
-      name,
-      email,
-      phone,
-      cvUrl,
-      personalInfo: cvData.personalInfo,
-      education: cvData.education,
-      qualifications: cvData.qualifications,
-      projects: cvData.projects
-    };
+    // Save application data to local JSON file
+    const applicationsDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(applicationsDir)) {
+      fs.mkdirSync(applicationsDir, { recursive: true });
+    }
     
-    // Save to Google Sheets
-    console.log('Saving to Google Sheets...');
-    await googleSheetsService.saveToGoogleSheets(sheetData);
+    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    const jsonFilePath = path.join(applicationsDir, `application-${email}-${timestamp}.json`);
     
-    // Send webhook notification
-    console.log('Sending webhook notification...');
-    const webhookResult = await webhookService.sendWebhook({
-      personalInfo: cvData.personalInfo,
-      education: cvData.education,
-      qualifications: cvData.qualifications,
-      projects: cvData.projects,
-      cvUrl,
-      timestamp: application.timestamp.toISOString()
-    }, "testing");
+    fs.writeFileSync(
+      jsonFilePath, 
+      JSON.stringify({
+        name,
+        email,
+        phone,
+        cvUrl,
+        timestamp: new Date().toISOString(),
+        personalInfo: cvData.personalInfo,
+        education: cvData.education,
+        qualifications: cvData.qualifications,
+        projects: cvData.projects
+      }, null, 2)
+    );
     
-    console.log('Webhook notification result:', webhookResult.success ? 'Success' : 'Failed');
+    console.log(`Application data saved to ${jsonFilePath}`);
     
-    // Schedule follow-up email
-    console.log('Scheduling follow-up email...');
-    await emailService.scheduleFollowUpEmail(email, name);
+    // Try to send webhook (if available)
+    try {
+      if (typeof require('../services/webhookService').sendWebhook === 'function') {
+        const webhookService = require('../services/webhookService');
+        await webhookService.sendWebhook({
+          personalInfo: cvData.personalInfo,
+          education: cvData.education,
+          qualifications: cvData.qualifications,
+          projects: cvData.projects,
+          cvUrl,
+          timestamp: application.timestamp.toISOString()
+        }, "testing");
+        console.log('Webhook notification sent');
+      }
+    } catch (webhookError) {
+      console.error('Error sending webhook (non-fatal):', webhookError);
+    }
+    
+    // Try to schedule follow-up email (if available)
+    try {
+      if (typeof require('../services/emailService').scheduleFollowUpEmail === 'function') {
+        const emailService = require('../services/emailService');
+        await emailService.scheduleFollowUpEmail(email, name);
+        console.log('Follow-up email scheduled');
+      }
+    } catch (emailError) {
+      console.error('Error scheduling email (non-fatal):', emailError);
+    }
     
     // Return success response
     return res.status(201).json({
@@ -149,16 +189,39 @@ const getApplicationStatus = async (req, res) => {
       });
     }
     
-    // Simple placeholder implementation
-    // In a real app, you would query a database or Google Sheets
+    // Try to find application data in local JSON file
+    const applicationsDir = path.join(process.cwd(), 'data');
+    let status = 'Not Found';
+    let submitDate = null;
+    
+    if (fs.existsSync(applicationsDir)) {
+      const files = fs.readdirSync(applicationsDir);
+      
+      // Find files that match this email
+      const matchingFiles = files.filter(file => 
+        file.includes(email) && file.endsWith('.json')
+      );
+      
+      if (matchingFiles.length > 0) {
+        // Sort by most recent
+        matchingFiles.sort().reverse();
+        
+        // Read the most recent file
+        const latestFile = path.join(applicationsDir, matchingFiles[0]);
+        const appData = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+        
+        status = 'Under Review';
+        submitDate = appData.timestamp;
+      }
+    }
     
     return res.status(200).json({
       success: true,
       message: 'Application status retrieved',
       data: {
         email,
-        status: 'Under Review',
-        submitDate: new Date().toISOString()
+        status,
+        submitDate: submitDate || new Date().toISOString()
       }
     });
   } catch (error) {

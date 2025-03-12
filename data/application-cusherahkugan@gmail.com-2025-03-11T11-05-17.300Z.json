@@ -1,0 +1,36 @@
+{
+  "name": "Kugananthan",
+  "email": "cusherahkugan@gmail.com",
+  "phone": "+940766741405",
+  "cvUrl": "http://localhost:5000/uploads/1741691117292-e3e52047-ab2e-4134-886e-b4648618f75b.pdf",
+  "timestamp": "2025-03-11T11:05:17.300Z",
+  "personalInfo": {
+    "name": "Kugananthan",
+    "email": "cusherahkugan@gmail.com",
+    "phone": "+940766741405"
+  },
+  "education": [
+    {
+      "institution": "Example University",
+      "degree": "Bachelor's Degree",
+      "year": "2018-2022"
+    }
+  ],
+  "qualifications": [
+    {
+      "skill": "JavaScript"
+    },
+    {
+      "skill": "React"
+    },
+    {
+      "skill": "Node.js"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Portfolio Website",
+      "description": "Personal website showcasing my work"
+    }
+  ]
+}

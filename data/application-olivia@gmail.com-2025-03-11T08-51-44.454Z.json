@@ -1,0 +1,46 @@
+{
+  "name": "olivia",
+  "email": "olivia@gmail.com",
+  "phone": "+940766741405",
+  "cvUrl": "http://localhost:5000/uploads/1741683104449-b8d7a09e-678c-4460-8005-a85cdf08caa4.pdf",
+  "timestamp": "2025-03-11T08:51:44.454Z",
+  "personalInfo": {
+    "id": "668adba2-a796-45a9-8daf-30d9270611ab",
+    "name": "olivia",
+    "email": "olivia@gmail.com",
+    "phone": "+940766741405",
+    "linkedin": "linkedin.com/in/example",
+    "github": "github.com/example"
+  },
+  "education": [
+    {
+      "id": "898ac91e-4f9e-4a33-996d-1963f3501e5e",
+      "institution": "University of Example",
+      "degree": "Bachelor of Science in Computer Science",
+      "date": "2018-2022",
+      "detected": true
+    }
+  ],
+  "qualifications": [
+    {
+      "id": "47637adf-ba17-4329-946d-d73bad7f5ec3",
+      "type": "skills",
+      "text": "JavaScript, React, Node.js, Express",
+      "detected": true
+    },
+    {
+      "id": "b493e0ca-c5a2-4051-ad23-2df00e3ecb61",
+      "type": "certifications",
+      "text": "AWS Certified Developer",
+      "detected": true
+    }
+  ],
+  "projects": [
+    {
+      "id": "175ffaf6-b20c-4b82-8d9d-2b6b5a333c33",
+      "name": "Example Project",
+      "description": "A web application built with React and Node.js",
+      "detected": true
+    }
+  ]
+}

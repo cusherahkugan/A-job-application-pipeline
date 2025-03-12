@@ -11,22 +11,38 @@ export const submitApplication = async (formData) => {
   try {
     console.log('Submitting to:', `${API_URL}/applications/submit`);
     
-    const response = await fetch(`${API_URL}/applications/submit`, {
-      method: 'POST',
-      body: formData, // FormData for file upload
-      // No Content-Type header - browser sets it with boundary for FormData
-      mode: 'cors', // Explicitly set CORS mode
-      credentials: 'same-origin', // Changed from 'include' to 'same-origin'
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to submit application');
+    // Log what we're sending (for debugging)
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value}`);
     }
     
-    return await response.json();
+    const response = await fetch(`${API_URL}/applications/submit`, {
+      method: 'POST',
+      body: formData,
+      mode: 'cors',
+      credentials: 'same-origin',
+      // Don't set Content-Type - browser sets it automatically for FormData
+    });
+    
+    // Check if response was received
+    if (!response) {
+      throw new Error('No response received from server');
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || `Server error: ${response.status}`);
+    }
+    
+    return data;
   } catch (error) {
     console.error('API Error:', error);
+    
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Server connection failed. Is the server running?');
+    }
+    
     throw error;
   }
 };
